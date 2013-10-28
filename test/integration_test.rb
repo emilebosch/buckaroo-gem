@@ -36,11 +36,10 @@ describe "Integration test" do
 
   it "should be able to check a " do
     response = Buckaroo.request_payment!({
+      invoice_number: '12',
       description: 'Bank overboeking',
-      amount: 200,
-      currency: 'EUR',
+      amount: 200
     })
-
     message = Buckaroo.status!(response.transaction)
   end
 
@@ -51,12 +50,12 @@ describe "Integration test" do
   it "should process an overboeking with pending" do
 
     response = Buckaroo.request_payment!({
+      invoice_number: '23',
       description: 'Bank overboeking',
-      amount: 200,
-      currency: 'EUR',
+      amount: 200
     })
 
-    assert response.valid?, "response should be valid"
+    assert response.pending_input?, "response should be valid"
     assert response.redirect_url, "response should have a redirect url"
 
     p response.redirect_url
@@ -86,12 +85,12 @@ describe "Integration test" do
   it "should process an ABN amro bank /w no pending" do
 
     response = Buckaroo.request_payment!({
+      invoice_number: '23',
       description: 'Ideal',
-      amount: 200,
-      currency: 'EUR',
+      amount: 200
     })
 
-    assert response.valid?, "response should be valid"
+    assert response.pending_input?, "response should be valid"
     assert response.redirect_url, "response should have a redirect url"
 
     p response.redirect_url

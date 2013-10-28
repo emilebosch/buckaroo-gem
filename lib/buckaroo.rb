@@ -5,6 +5,7 @@ require 'uri'
 module Buckaroo
 
   class << self
+
     attr_accessor :key, :secret, :callback, :debug, :test
     def debug?; debug end;
     def test?; test; end;
@@ -21,7 +22,6 @@ module Buckaroo
       end
 
       response_body = RestClient.post "#{gateway}?op=#{operation}", nvp
-
       h = URI.decode_www_form(response_body)
 
       reponse_hash = {}
@@ -38,33 +38,36 @@ module Buckaroo
       reponse_hash
     end
 
-    def gateway
-      return "https://testcheckout.buckaroo.nl/nvp/" if test?
-      "https://testcheckout.buckaroo.nl/nvp/"
-    end
-
     def status!(transaction_id)
       TransactionStatusResponse.new Buckaroo.execute!({'brq_transaction' => transaction_id}, 'transactionstatus')
     end
 
     def request_payment!(hash)
 
+      throw 'amount needs to be set' unless hash[:amount]
+      throw 'invoice_number' unless hash[:invoice_number]
+      throw 'description' unless hash[:description]
+
       request = {}
-      request['brq_amount'] = '100.00'
+      request['brq_amount'] = hash[:amount]
       request['brq_currency'] = 'EUR'
-      request['brq_invoicenumber'] = 'sasad'
-      request['brq_description'] = 'test'
+      request['brq_invoicenumber'] = hash[:invoice_number]
+      request['brq_description'] = hash[:description]
       request['brq_culture'] = 'nl-NL'
 
-      request['brq_return'] = Buckaroo.callback
-      request['brq_returncancel'] = Buckaroo.callback
-      request['brq_returnerror'] = Buckaroo.callback
-      request['brq_returnreject'] = Buckaroo.callback
-      request['brq_continue_on_incomplete'] = 'RedirectToHTML'
+      request['brq_return'] = hash[:return_url] || Buckaroo.callback
+      request['brq_returncancel'] = hash[:cancel_url] || Buckaroo.callback
+      request['brq_returnerror'] = hash[:error_url] || Buckaroo.callback
+      request['brq_returnreject'] = hash[:reject_url] || Buckaroo.callback
 
+      request['brq_continue_on_incomplete'] = 'RedirectToHTML'
       TransactionRequestResponse.new Buckaroo.execute!(request, 'transactionrequest')
     end
 
+    def gateway
+      return "https://testcheckout.buckaroo.nl/nvp/" if test?
+      "https://testcheckout.buckaroo.nl/nvp/"
+    end
   end
 
   class Response
@@ -77,12 +80,36 @@ module Buckaroo
       @raw
     end
 
+    def status_code
+      raw['BRQ_STATUSCODE'].to_i
+    end
+
     def redirect_url
       raw['BRQ_REDIRECTURL']
     end
 
-    def valid?
-      raw['BRQ_STATUSCODE'] == '790'
+    def pending_input?
+      status_code = 790
+    end
+
+    def pending_processing?
+      status_code = 791
+    end
+
+    def invoice_number
+      raw['BRQ_INVOICENUMBER']
+    end
+
+    def amount
+      raw['BRQ_AMOUNT']
+    end
+
+    def awaiting_consumer?
+      status_code = 792
+    end
+
+    def on_hold?
+      status_code = 793
     end
 
     def transaction
@@ -96,11 +123,7 @@ module Buckaroo
   class TransactionRequestResponse < Response
   end
 
-  class WebCallback
-    def initialize(raw)
-      @raw = raw
-    end
-
+  class WebCallback < Response
     def valid?
       Hasher.valid? @raw, Buckaroo.secret
     end
