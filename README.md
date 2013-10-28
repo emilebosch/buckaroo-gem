@@ -58,4 +58,10 @@ end
 
 Buckaroo comes with a sweet test suite. It comes with some basic tests, and a full integration test using ``phantomjs`` against the buckaroo gateway.
 
+Type the following to do the tests (IT WILL DO AN ACTUAL TEST PAYMENT TO BUCKAROO):
+
+```
+rake test
+```
+
 Under the hood it uses, phantomjs, sinatra and capybara to test the functionality end to end.

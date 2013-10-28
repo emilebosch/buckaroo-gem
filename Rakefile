@@ -7,6 +7,18 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 
+Rake::TestTask.new 'test:integration' do |t|
+  t.libs << "lib/buckaroo.rb"
+  t.test_files = ['test/integration_test.rb']
+  t.verbose = true
+end
+
+Rake::TestTask.new 'test:unit' do |t|
+  t.libs << "lib/buckaroo.rb"
+  t.test_files = ['test/unit_test.rb']
+  t.verbose = true
+end
+
 task :uninstall do
   puts 'Unintalling..'
   `gem uninstall buckaroo -ax`

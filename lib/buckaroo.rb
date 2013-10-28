@@ -9,32 +9,91 @@ module Buckaroo
     def debug?; debug end;
     def test?; test; end;
 
-    def execute!(hash, operation='transactionrequest')
+    def execute!(hash, operation)
+      nvp = hash.dup
+      nvp['brq_websitekey'] = @key
+      nvp['brq_signature'] = Hasher.calculate(nvp, @secret)
 
-      hash['brq_websitekey'] = @key
-      hash['brq_signature'] = Hasher.calculate(hash, @secret)
-      hash['op'] = operation
+      if debug
+        puts "------------------------"
+        puts "=> Request: #{operation}"
+        puts nvp.inspect
+      end
 
-      p hash if debug?
-      response_body = RestClient.post gateway, hash
+      response_body = RestClient.post "#{gateway}?op=#{operation}", nvp
 
-      p response_body if debug?
       h = URI.decode_www_form(response_body)
 
-      response = {}
-      h.collect { |k| response[k[0]] = k[1] }
+      reponse_hash = {}
+      h.collect { |k| reponse_hash[k[0]] = k[1] }
 
-      given = response.delete 'BRQ_SIGNATURE'
-      computed = Hasher.calculate(response, @secret)
+      if debug
+        puts
+        puts "<= Response: #{operation}"
+        puts reponse_hash.inspect
+        puts "------------------------"
+      end
 
-      raise "Signature doesn't match" unless given == computed
-      response
+      raise "Signature doesn't match" unless Hasher.valid?(reponse_hash, @secret)
+      reponse_hash
     end
 
     def gateway
       return "https://testcheckout.buckaroo.nl/nvp/" if test?
       "https://testcheckout.buckaroo.nl/nvp/"
     end
+
+    def status!(transaction_id)
+      TransactionStatusResponse.new Buckaroo.execute!({'brq_transaction' => transaction_id}, 'transactionstatus')
+    end
+
+    def request_payment!(hash)
+
+      request = {}
+      request['brq_amount'] = '100.00'
+      request['brq_currency'] = 'EUR'
+      request['brq_invoicenumber'] = 'sasad'
+      request['brq_description'] = 'test'
+      request['brq_culture'] = 'nl-NL'
+
+      request['brq_return'] = Buckaroo.callback
+      request['brq_returncancel'] = Buckaroo.callback
+      request['brq_returnerror'] = Buckaroo.callback
+      request['brq_returnreject'] = Buckaroo.callback
+      request['brq_continue_on_incomplete'] = 'RedirectToHTML'
+
+      TransactionRequestResponse.new Buckaroo.execute!(request, 'transactionrequest')
+    end
+
+  end
+
+  class Response
+
+    def initialize(raw)
+      @raw = raw
+    end
+
+    def raw
+      @raw
+    end
+
+    def redirect_url
+      raw['BRQ_REDIRECTURL']
+    end
+
+    def valid?
+      raw['BRQ_STATUSCODE'] == '790'
+    end
+
+    def transaction
+      raw['BRQ_TRANSACTIONS']
+    end
+  end
+
+  class TransactionStatusResponse < Response
+  end
+
+  class TransactionRequestResponse < Response
   end
 
   class WebCallback
@@ -47,64 +106,6 @@ module Buckaroo
     end
   end
 
-
-  class Charge
-
-    def initialize(hash)
-    end
-
-    def operation
-      "transactionrequest"
-    end
-
-    def to_hash
-      hash = {}
-      hash['brq_amount'] = '100.00'
-      hash['brq_currency'] = 'EUR'
-      hash['brq_invoicenumber'] = 'sasad'
-      hash['brq_description'] = 'test'
-      hash['brq_culture'] = 'nl-NL'
-
-      hash['brq_return'] = Buckaroo.callback
-      hash['brq_returncancel'] = Buckaroo.callback
-      hash['brq_returnerror'] = Buckaroo.callback
-      hash['brq_returnreject'] = Buckaroo.callback
-
-      hash['brq_continue_on_incomplete'] = 'RedirectToHTML'
-      hash
-    end
-
-    def execute!
-      res_hash = Buckaroo.execute!(to_hash, operation)
-      ChargeResponse.new(res_hash)
-    end
-
-    def valid?
-      true
-    end
-
-    class << self
-      def create!(hash)
-        charge = Charge.new(hash)
-        charge.execute!
-      end
-    end
-  end
-
-  class ChargeResponse
-    def initialize(raw)
-      @raw = raw
-    end
-
-    def redirect_url
-      @raw['BRQ_REDIRECTURL']
-    end
-
-    def valid?
-      @raw['BRQ_STATUSCODE'] == '790'
-    end
-  end
-
   class Hasher
 
     def self.valid?(hash, secret_key)
@@ -114,15 +115,6 @@ module Buckaroo
       name, signature = hash.find {|x,y| x.downcase == "brq_signature" }
       signature = hash.delete name
 
-      # FIXME: Hack because bucakroo is inconsistent in case conventions
-      # and double decoding? - I AM NOT KIDDING!
-      hack = true
-      if hack
-        a = {}
-        hash.map { |k,v| a[k] = URI.decode_www_form_component(v) }
-        hash = a
-      end
-
       computed = Hasher.calculate(hash, secret_key)
       computed == signature
     end
@@ -131,15 +123,15 @@ module Buckaroo
       raise ArgumentError, "Hasher: No hash given but '#{hash}'" unless hash.is_a?(Hash)
       raise ArgumentError, "Hasher: Secret key is not as string or not set #{secret_key}" unless secret_key.is_a?(String)
 
-      # sort keys alphabetic
-      # concatonate to string
-      # add secet
-      # calculate RSA1
+      # 1. sort keys alphabetic
+      # 2. concatonate to string
+      # 3. add secet
+      # 4. calculate RSA1
 
       x = hash.sort_by {|k, v| k.downcase.to_s }
-
       vars = x.collect{|k,v,| "#{k}=#{v}" }.join
       vars << secret_key
+
       Digest::SHA1.hexdigest vars
     end
   end
