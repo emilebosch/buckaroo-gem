@@ -6,7 +6,7 @@ module Buckaroo
 
   class << self
 
-    attr_accessor :key, :secret, :callback, :debug, :test
+    attr_accessor :key, :secret, :callback, :debug, :test, :push
     def debug?; debug end;
     def test?; test; end;
 
@@ -54,6 +54,9 @@ module Buckaroo
       request['brq_requestedservices'] = 'ideal,transfer'
       request['brq_culture'] = 'nl-NL'
       request['brq_continue_on_incomplete'] = 'RedirectToHTML'
+
+      request['brq_push'] = Buckaroo.push if Buckaroo.push
+      request['brq_pushfailure'] = Buckaroo.push if Buckaroo.push
 
       request['brq_amount'] = hash[:amount]
       request['brq_invoicenumber'] = hash[:invoice_number]

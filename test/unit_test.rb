@@ -1,4 +1,4 @@
-require './test/test_helper.rb'
+require './test/support/test_helper.rb'
 
 describe "Buckaroo::WebCallback" do
 
