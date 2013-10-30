@@ -49,18 +49,17 @@ module Buckaroo
       throw 'description' unless hash[:description]
 
       request = {}
-      request['brq_amount'] = hash[:amount]
+
       request['brq_currency'] = 'EUR'
+      request['brq_requestedservices'] = 'ideal,transfer'
+      request['brq_culture'] = 'nl-NL'
+      request['brq_continue_on_incomplete'] = 'RedirectToHTML'
+
+      request['brq_amount'] = hash[:amount]
       request['brq_invoicenumber'] = hash[:invoice_number]
       request['brq_description'] = hash[:description]
-      request['brq_culture'] = 'nl-NL'
-
       request['brq_return'] = hash[:return_url] || Buckaroo.callback
-      request['brq_returncancel'] = hash[:cancel_url] || Buckaroo.callback
-      request['brq_returnerror'] = hash[:error_url] || Buckaroo.callback
-      request['brq_returnreject'] = hash[:reject_url] || Buckaroo.callback
 
-      request['brq_continue_on_incomplete'] = 'RedirectToHTML'
       TransactionRequestResponse.new Buckaroo.execute!(request, 'transactionrequest')
     end
 

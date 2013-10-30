@@ -2,7 +2,7 @@ require 'buckaroo'
 require 'sinatra'
 require 'byebug'
 
-Buckaroo.debug  = true
+Buckaroo.debug = ENV['DEBUG']
 Buckaroo.secret = ENV['BUCK_SECRET']
 Buckaroo.key = ENV['BUCK_KEY']
 

@@ -16,7 +16,7 @@ class MyApp < Sinatra::Base
   end
 end
 
-describe "Integration test" do
+describe "integration test" do
   include Capybara::DSL
 
   def setup
@@ -34,7 +34,11 @@ describe "Integration test" do
     Capybara.reset_session!
   end
 
-  it "should be able to check a " do
+  it "should be able to refund a transation" do
+
+  end
+
+  it "should be able to request a transaction status" do
     response = Buckaroo.request_payment!({
       invoice_number: '12',
       description: 'Bank overboeking',
@@ -44,7 +48,6 @@ describe "Integration test" do
   end
 
   it "should process when someone cancels a payment in buckaroo" do
-
   end
 
   it "should process an overboeking with pending" do
@@ -57,8 +60,6 @@ describe "Integration test" do
 
     assert response.pending_input?, "response should be valid"
     assert response.redirect_url, "response should have a redirect url"
-
-    p response.redirect_url
 
     visit response.redirect_url
 
@@ -93,7 +94,6 @@ describe "Integration test" do
     assert response.pending_input?, "response should be valid"
     assert response.redirect_url, "response should have a redirect url"
 
-    p response.redirect_url
     visit response.redirect_url
 
     ideal = find(:css, "[for='method_ideal']")
