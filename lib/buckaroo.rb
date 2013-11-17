@@ -11,6 +11,7 @@ module Buckaroo
     def test?; test; end;
 
     def execute!(hash, operation)
+
       nvp = hash.dup
       nvp['brq_websitekey'] = @key
       nvp['brq_signature'] = Hasher.calculate(nvp, @secret)
@@ -82,7 +83,7 @@ module Buckaroo
       @raw
     end
 
-    def status_code
+    def status
       raw['BRQ_STATUSCODE'].to_i
     end
 
@@ -110,6 +111,10 @@ module Buckaroo
       status_code = 792
     end
 
+    def valid?
+      Hasher.valid? raw, Buckaroo.secret
+    end
+
     def on_hold?
       status_code = 793
     end
@@ -126,9 +131,6 @@ module Buckaroo
   end
 
   class WebCallback < Response
-    def valid?
-      Hasher.valid? @raw, Buckaroo.secret
-    end
   end
 
   class Hasher

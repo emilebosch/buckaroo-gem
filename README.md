@@ -17,7 +17,7 @@ Or add it to your `Gemfile`
 
 First start by setting up your keys:
 
-```ruby
+```
 Buckaroo.debug  = true
 Buckaroo.secret = ENV['BUCK_SECRET']
 Buckaroo.key = ENV['BUCK_KEY']
@@ -29,7 +29,7 @@ Use ``rbenv-vars`` to ease your pain.
 
 First, let's request a payment, and redirect the user to the payment gatway.
 
-```ruby
+```
 reponse = Buckaroo::Charge.create!(
   description: 'ten thousand furbies',
   amount:1000,
@@ -45,7 +45,7 @@ if response.require_redirect? redirect_to response.redirect_url
 
 To check the information being send back from the gateway, you can use the ``Buckaroo::WebCallback`` to process the response.
 
-```ruby
+```
 class MyApp < Sinatra::Base
   post '/' do
     callback = Buckaroo::WebCallback.new(params)
@@ -64,4 +64,7 @@ Type the following to do the tests (IT WILL DO AN ACTUAL TEST PAYMENT TO BUCKARO
 rake test
 ```
 
-Under the hood it uses, phantomjs, sinatra and capybara to test the functionality end to end.
+Under the hood it uses, `phantomjs`, `sinatra` and `capybara` to test the functionality end to end.
+
+
+#### SSH push reverse proxy

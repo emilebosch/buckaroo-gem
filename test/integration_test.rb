@@ -131,7 +131,6 @@ describe "integration test" do
     fill_in 'E-Mail adres', with: 'info@captainawesomeomg.com'
 
     click_button 'Verder'
-
     assert has_content? 'Uw betaling is geaccepteerd.'
     click_button 'Verder'
 
