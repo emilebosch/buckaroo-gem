@@ -20,7 +20,7 @@ Rake::TestTask.new 'test:unit' do |t|
 end
 
 task :uninstall do
-  puts 'Unintalling..'
+  puts 'Uninstalling..'
   `gem uninstall buckaroo -ax`
   `rbenv rehash`
 end
