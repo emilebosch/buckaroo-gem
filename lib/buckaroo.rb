@@ -1,25 +1,28 @@
 require 'digest/sha1'
 require 'rest_client'
 require 'uri'
+require 'log4r'
 
 module Buckaroo
 
   class << self
 
-    attr_accessor :key, :secret, :callback, :debug, :test, :push
+    attr_accessor :key, :secret, :callback, :debug, :test, :push, :log
     def debug?; debug end;
     def test?; test; end;
 
     def execute!(hash, operation)
+      self.log = Log4r::Logger.new('log')
+      log.outputters << Log4r::StdoutOutputter.new('log_stdout')
 
       nvp = hash.dup
       nvp['brq_websitekey'] = @key
       nvp['brq_signature'] = Hasher.calculate(nvp, @secret)
 
       if debug
-        puts "------------------------"
-        puts "=> Request: #{operation}"
-        puts nvp.inspect
+        log.debug "------------------------"
+        log.debug "=> Request: #{operation}"
+        log.debug nvp.inspect
       end
 
       response_body = RestClient.post "#{gateway}?op=#{operation}", nvp
@@ -29,10 +32,10 @@ module Buckaroo
       h.collect { |k| reponse_hash[k[0]] = k[1] }
 
       if debug
-        puts
-        puts "<= Response: #{operation}"
-        puts reponse_hash.inspect
-        puts "------------------------"
+        log.debug ""
+        log.debug "<= Response: #{operation}"
+        log.debug reponse_hash.inspect
+        log.debug "------------------------"
       end
 
       raise "Signature doesn't match" unless Hasher.valid?(reponse_hash, @secret)
