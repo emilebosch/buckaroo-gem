@@ -71,7 +71,7 @@ module Buckaroo
 
     def gateway
       return "https://testcheckout.buckaroo.nl/nvp/" if test?
-      "https://testcheckout.buckaroo.nl/nvp/"
+      "https://checkout.buckaroo.nl/nvp/"
     end
   end
 
