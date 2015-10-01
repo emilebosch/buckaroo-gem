@@ -55,8 +55,7 @@ module Buckaroo
       request = {}
 
       request['brq_currency'] = 'EUR'
-      request['brq_requestedservices'] = 'ideal,transfer'
-      request['brq_culture'] = 'nl-NL'
+      request['brq_culture'] = 'en-EN'
       request['brq_continue_on_incomplete'] = 'RedirectToHTML'
 
       request['brq_push'] = Buckaroo.push if Buckaroo.push
