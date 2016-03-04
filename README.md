@@ -1,5 +1,7 @@
 # Buckaroo ruby gem
 
+[![Build Status](http://drone.hoppinger.com/api/badges/hoppinger/buckaroo/status.svg)](http://drone.hoppinger.com/hoppinger/buckaroo)
+
 This is a gem to allow buckaroo payments against BPE 3.0. Its right now under development
 but will be released in the next couple of days.
 
