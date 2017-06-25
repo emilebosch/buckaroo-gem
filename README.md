@@ -43,7 +43,7 @@ if response.require_redirect? redirect_to response.redirect_url
 
 #### Checking wheter a payment has succeeded after a redirect from Buckaroo
 
-To check the information being send back from the gateway, you can use the ``Buckaroo::WebCallback`` to process the response.
+To check the information being sent back from the gateway, you can use the ``Buckaroo::WebCallback`` to process the response.
 
 ```
 class MyApp < Sinatra::Base
