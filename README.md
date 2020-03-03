@@ -23,7 +23,7 @@ Buckaroo.secret = ENV['BUCK_SECRET']
 Buckaroo.key = ENV['BUCK_KEY']
 ```
 
-Use ``rbenv-vars`` to ease your pain.
+Use `rbenv-vars` to ease your pain.
 
 #### Creating a payment request
 
@@ -43,7 +43,7 @@ if response.require_redirect? redirect_to response.redirect_url
 
 #### Checking wheter a payment has succeeded after a redirect from Buckaroo
 
-To check the information being send back from the gateway, you can use the ``Buckaroo::WebCallback`` to process the response.
+To check the information being send back from the gateway, you can use the `Buckaroo::WebCallback` to process the response.
 
 ```
 class MyApp < Sinatra::Base
@@ -56,7 +56,7 @@ end
 
 ### Test
 
-Buckaroo comes with a sweet test suite. It comes with some basic tests, and a full integration test using ``phantomjs`` against the buckaroo gateway.
+Buckaroo comes with a sweet test suite. It comes with some basic tests, and a full integration test using `phantomjs` against the buckaroo gateway.
 
 Type the following to do the tests (IT WILL DO AN ACTUAL TEST PAYMENT TO BUCKAROO):
 
@@ -66,5 +66,6 @@ rake test
 
 Under the hood it uses, `phantomjs`, `sinatra` and `capybara` to test the functionality end to end.
 
-
 #### SSH push reverse proxy
+
+It uses a SSH reverse tunnel/proxy that you need to set up to check the webhooks.

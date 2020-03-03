@@ -1,24 +1,23 @@
-require './test/test_helper.rb'
-require './test/support/sshproxy_helpers'
-require 'sinatra'
-require 'capybara/dsl'
-require 'capybara/poltergeist'
-require 'logger'
+require "./test/test_helper.rb"
+require "./test/support/sshproxy_helpers"
+require "sinatra"
+require "capybara/dsl"
+require "capybara/poltergeist"
+require "logger"
 
-FileUtils.mkdir_p 'tmp'
-$LOGGER = Logger.new('tmp/logfile.log')
+FileUtils.mkdir_p "tmp"
+$LOGGER = Logger.new("tmp/logfile.log")
 $LOGGER.level = Logger::DEBUG
 
 class MyApp < Sinatra::Base
-
-  post '/push' do
+  post "/push" do
     puts "RECEIVED PUSH"
     puts params
     "PUSH IT"
   end
 
-  post '/' do
-    puts 'RECEIVED CALLBACK'
+  post "/" do
+    puts "RECEIVED CALLBACK"
     $received = params
     $LOGGER.debug "Callback data received: #{params}"
     "GOT IT"
@@ -49,17 +48,16 @@ describe "integration test" do
   end
 
   it "should be able to receive a push" do
-
     begin
-      setup_ssh_proxy ssh_host: ENV['SSH_HOST'], ssh_user: ENV['SSH_USER'], remote_port: 8080, exposed_as_port: 80
+      setup_ssh_proxy ssh_host: ENV["SSH_HOST"], ssh_user: ENV["SSH_USER"], remote_port: 8080, exposed_as_port: 80
 
-      Buckaroo.push     = "#{ssh_proxy_url}/push"
+      Buckaroo.push = "#{ssh_proxy_url}/push"
       Buckaroo.callback = ssh_proxy_url
 
       response = Buckaroo.request_payment!({
-        invoice_number: '23',
-        description: 'Bank overboeking',
-        amount: 200
+        invoice_number: "23",
+        description: "Bank overboeking",
+        amount: 200,
       })
 
       assert response.pending_input?, "response should be valid"
@@ -70,19 +68,18 @@ describe "integration test" do
       overmaking = find(:css, "[for='method_transfer']")
       overmaking.click
 
-      assert has_content? 'Uw betaling'
+      assert has_content? "Uw betaling"
 
-      fill_in 'Voornaam',     with: 'Hello'
-      fill_in 'Achternaam',   with: 'Awesome'
-      fill_in 'E-Mail adres', with: 'infado@pushasd.com'
+      fill_in "Voornaam", with: "Hello"
+      fill_in "Achternaam", with: "Awesome"
+      fill_in "E-Mail adres", with: "infado@pushasd.com"
 
-      click_button 'Verder'
+      click_button "Verder"
 
-      assert has_content?('Uw betaling is geaccepteerd.'), 'Not on uw betaling is geaccepteerd'
-      click_button 'Verder'
+      assert has_content?("Uw betaling is geaccepteerd."), "Not on uw betaling is geaccepteerd"
+      click_button "Verder"
 
       assert page.has_text?("GOT IT"), "Page should contain text GOT IT, are we redirected?"
-
     ensure
       teardown_ssh_proxy
     end
@@ -90,16 +87,15 @@ describe "integration test" do
 
   def assert(*args)
     passed = super(*args)
-    ensure
+  ensure
     puts page.html unless passed
   end
 
   it "should be able to request a transaction status" do
-
     response = Buckaroo.request_payment!({
-      invoice_number: '12',
-      description: 'Bank overboeking',
-      amount: 200
+      invoice_number: "12",
+      description: "Bank overboeking",
+      amount: 200,
     })
 
     message = Buckaroo.status!(response.transaction)
@@ -109,11 +105,10 @@ describe "integration test" do
   end
 
   it "should process an overboeking with pending" do
-
     response = Buckaroo.request_payment!({
-      invoice_number: '23',
-      description: 'Bank overboeking',
-      amount: 200
+      invoice_number: "23",
+      description: "Bank overboeking",
+      amount: 200,
     })
 
     assert response.pending_input?, "response should be valid"
@@ -124,15 +119,15 @@ describe "integration test" do
     overmaking = find(:css, "[for='method_transfer']")
     overmaking.click
 
-    assert has_content? 'Uw betaling'
+    assert has_content? "Uw betaling"
 
-    fill_in 'Voornaam',     with: 'Captain'
-    fill_in 'Achternaam',   with: 'Awesome'
-    fill_in 'E-Mail adres', with: 'info@captainawesomeomg.com'
+    fill_in "Voornaam", with: "Captain"
+    fill_in "Achternaam", with: "Awesome"
+    fill_in "E-Mail adres", with: "info@captainawesomeomg.com"
 
-    click_button 'Verder'
-    assert has_content? 'Uw betaling is geaccepteerd.'
-    click_button 'Verder'
+    click_button "Verder"
+    assert has_content? "Uw betaling is geaccepteerd."
+    click_button "Verder"
 
     assert page.has_text?("GOT IT"), "Page should contain text GOT IT, are we redirected?"
 
@@ -141,11 +136,10 @@ describe "integration test" do
   end
 
   it "should process an ABN amro bank /w no pending" do
-
     response = Buckaroo.request_payment!({
-      invoice_number: '23',
-      description: 'Ideal',
-      amount: 200
+      invoice_number: "23",
+      description: "Ideal",
+      amount: 200,
     })
 
     assert response.pending_input?, "response should be valid"
@@ -156,14 +150,14 @@ describe "integration test" do
     ideal = find(:css, "[for='method_ideal']")
 
     assert ideal, "ideal link cannot be found on page"
-    assert ideal.text == 'iDEAL', "first element should have been ideal"
+    assert ideal.text == "iDEAL", "first element should have been ideal"
 
     ideal.click
 
-    select('ABNAMRO Bank', :from => 'Uw bank')
+    select("ABNAMRO Bank", :from => "Uw bank")
     click_button "Verder"
 
-    select("190 - Succes", :from => 'sc')
+    select("190 - Succes", :from => "sc")
     click_button "Submit status"
 
     assert page.has_text?("GOT IT"), "Page should contain text GOT IT, are we redirected?"
@@ -171,5 +165,4 @@ describe "integration test" do
     callback = Buckaroo::WebCallback.new($received)
     assert callback.valid?, "not valid?"
   end
-
 end
